@@ -1,84 +1,94 @@
 #ifndef LINEAR_REGRESSION_H
 #define LINEAR_REGRESSION_H
 
-#include "MatrixS\Matrix.h"
+#include "Matrix.h"
+#include "TextReader.h"
 
 class LinearRegression{
 
 public:
-	LinearRegression()
+	
+	LinearRegression(TextReader& reader)
 	{
+		_matrix = reader.getMatrix();
+		Matrix<double> xmat(_matrix.getRowCount(), _matrix.getColoumnCount() - 1);
+		_xMatrix = xmat;
 		
+		Matrix<double> ymat(_matrix.getRowCount(), 1);
+
+		//since matrix are defaultly instantiate as 10*10 matrix following assingment assinges values to first column of the _yMatrix
+		//change the copy constructor so that this issue is fixed.
+		_yMatrix = ymat;
+
+		initialize();
 	}
-	~LinearRegression();
+
+	/*
+		in genaral case we should have the constructor which take arguments of data adapter, costMinimization algorithms at least.
+		
+		LinearReregression(TextReader,MinimizationAlgo);
+
+		MinimizationAlgo represents the the algorithems like gradient decent, DBFG, FBFG like algorithms.
+	
+	*/
+	
+	//should implement the ~LinearRegression()
+	//~LinearRegression();
 
 	void initialize()
 	{
-		Matrix<double> mat(2, 1);
-		Matrix<double> xmat(20, 1);
-		Matrix<double> ymat(20, 1);
+		_xMatrix = _matrix.subMatrix(0, _matrix.getRowCount(), 0, _matrix.getColoumnCount() - 1);
 
-		_thetaMat = mat;
-		_theta1 = -_thetaMat(0,0);
-		_theta1 = -_thetaMat(1, 0);
+		//assuming the last column of the matrix contains "y"
+		_yMatrix = _matrix.subMatrix(0, _matrix.getRowCount(), _matrix.getColoumnCount() - 1, 1);
 
-		//how to read data from file;
+		//theta matrix is column vector which has rows same as the _xMatrix.getRowCount()
+		Matrix<double> theta(_xMatrix.getRowCount(), 1);
 
+		_thetaMat = theta;
 
+		m = _matrix.getRowCount();
+		alpha = 0.03;
 
-		_xMatrix = xmat;
-		_yMatrix = ymat;
+	//  loging the information
+	//	_xMatrix.printMatrix();
+	//	cout << endl << endl;
+	// _yMatrix.printMatrix();
+
+		gradientDecend();
 
 	}
 
-	void gradientDecend()
+	Matrix<double> gradientDecend()
 	{
-		sigma(0);
-		double m = _yMatrix.getRowCount();
-		while (true)
-		{
-			_thetaMat(0, 0) = _thetaMat(0, 0) - _alpha*_sigma1 / m;
-			_thetaMat(0, 1) = _thetaMat(0, 0) - _alpha*_sigma2 / m;
-
-		}
-
+		_thetaMat = _thetaMat - (((_xMatrix*_thetaMat - _yMatrix).transpose())*_xMatrix)*(alpha / m);
+		return _thetaMat;
 	}
 
-	void sigma(int val)
+	double cost()
 	{
-		double sigmaTheta1=0;
-		double sigmaTheta2 = 0;
-
-		for (int i = 0; i < _yMatrix.getRowCount(); i++)
-		{
-			sigmaTheta1 += (hyphothisis(_xMatrix(0, i)) - _yMatrix(0, i));
-			sigmaTheta2 += (hyphothisis(_xMatrix(0, i)) - _yMatrix(0, i))*_xMatrix(0, i);
-		}
-
-		
-		_sigma1 = sigmaTheta1;
-		_sigma2 = sigmaTheta2;
-	}
 	
-	double hyphothisis(double val)
-	{
-		return _thetaMat(0,0) + _thetaMat(0,1) * val;
 	}
 
 protected:
 
 
 private:
+	
+	//Basic matrix needed to calculate the other functions in LinearRegression
+
+	//Matrix are defaultly instantiate as 10,10 matrix 
 	Matrix<double> _thetaMat;
 	Matrix<double> _xMatrix;
 	Matrix<double> _yMatrix;
 
-	double _theta1;
-	double _theta2;
-	double _alpha=0.05;
+	//matrix which stores the matrix returing from the textReader.getMatrix()
+	Matrix<double> _matrix;
 
-	double _sigma1=0;
-	double _sigma2=0;
+	double alpha;
+	int m;
+
+	//TextReader reader;
 };
 
 
