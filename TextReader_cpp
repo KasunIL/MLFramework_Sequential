@@ -1,0 +1,6 @@
+#include "TextReader.h"
+
+Matrix<double>& TextReader::getMatrix()
+{
+	return matrix;
+}
