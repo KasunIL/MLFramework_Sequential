@@ -1,8 +1,9 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 /*
- *This class represent a Matrix and provide functionality common to the Matrix 
- */
+*This class represent a Matrix and provide functionality common to the Matrix
+	Matrixx indexing is zero base which means index of the first row is zero
+*/
 
 #include <iostream>
 #include <vector>
@@ -29,7 +30,7 @@ class Matrix {
 
 	friend istream& operator>>(istream&, Matrix<T>&);
 
-public :
+public:
 	//default constructor
 	Matrix() :MATRIX_ROW_COUNT(10), MATRIX_COLOUMN_COUNT(10)
 	{
@@ -43,13 +44,13 @@ public :
 	}
 
 	//constructor with teo argument(#row,#coloumn,value of the matrix element) 
-	Matrix(int rowCount, int coloumnCount,int value) :MATRIX_ROW_COUNT(rowCount), MATRIX_COLOUMN_COUNT(coloumnCount)
+	Matrix(int rowCount, int coloumnCount, int value) :MATRIX_ROW_COUNT(rowCount), MATRIX_COLOUMN_COUNT(coloumnCount)
 	{
 		initialize(value);
 	}
 
 	//constructor
-	Matrix(int rowCount, int coloumnCount, vector<vector<T>>matrix ) :MATRIX_ROW_COUNT(rowCount), MATRIX_COLOUMN_COUNT(coloumnCount)
+	Matrix(int rowCount, int coloumnCount, vector<vector<T>>matrix) :MATRIX_ROW_COUNT(rowCount), MATRIX_COLOUMN_COUNT(coloumnCount)
 	{
 		_matrixs = matrix;
 	}
@@ -63,14 +64,14 @@ public :
 	}
 
 	/////////////////////////////////////////Utility functions////////////////////////////////////////////////////////////////////////////////
-	
+
 	vector<vector<T>>&  getVector()
 	{
 		return this->_matrixs;
 	}
 
 	//transpose this matrix(n*m) to m*n one
-	void transpose()
+	Matrix<T>& transpose()
 	{
 		vector<vector<T>> _tempMatrix;
 		_tempMatrix.resize(MATRIX_COLOUMN_COUNT, vector<T>(MATRIX_ROW_COUNT, 0));
@@ -83,7 +84,7 @@ public :
 				_tempMatrix[j][i] = _matrixs[i][j];
 			}
 
-			cout << endl;
+			//cout << endl;
 		}
 
 		//swap the value of dimension of the matrix
@@ -91,8 +92,9 @@ public :
 		MATRIX_ROW_COUNT = MATRIX_COLOUMN_COUNT;
 		MATRIX_COLOUMN_COUNT = temp;
 
-		_matrixs = _tempMatrix;
-	
+		//_matrixs = _tempMatrix;
+		return *(new Matrix<T>(MATRIX_ROW_COUNT,MATRIX_COLOUMN_COUNT,_tempMatrix));
+
 	}
 
 	//print the matrix using loop
@@ -102,7 +104,7 @@ public :
 		{
 			for (int j = 0; j < MATRIX_COLOUMN_COUNT; j++)
 			{
-				cout << setw(3)<<_matrixs[i][j];
+				cout << setw(10) << _matrixs[i][j];
 			}
 
 			cout << endl;
@@ -110,7 +112,7 @@ public :
 	}
 
 	int getRowCount()
-	{		
+	{
 		return MATRIX_ROW_COUNT;
 	}
 
@@ -119,9 +121,34 @@ public :
 		return MATRIX_COLOUMN_COUNT;
 	}
 
+	//start row, number of rows,start column, number if column
+	Matrix<T> subMatrix(int startRow,int rowCount,int startColumn,int columnCount)
+	{
+		Matrix mat(rowCount, columnCount);
+
+		int matRow = startRow;
+		int matColumn = startColumn;
+		int constColumn = matColumn;
+
+		for (int i = 0; i < rowCount && matRow < rowCount; i++)
+		{
+			for (int j = 0; j < columnCount&& matColumn < constColumn + columnCount; j++)
+			{
+				mat(i, j) = _matrixs[matRow][matColumn];
+				matColumn++;
+			}
+
+			matColumn = startColumn;
+			matRow++;
+		}
+
+		return mat;
+
+	}
+
 	////////////////////////////////////operator overload/////////////////////////////////////////////////////////////////////////////////
-	
-	Matrix<T>& operator+( Matrix<T>& other)
+
+	Matrix<T>& operator+(Matrix<T>& other)
 	{
 		if (MATRIX_COLOUMN_COUNT == other.MATRIX_COLOUMN_COUNT && MATRIX_ROW_COUNT == other.MATRIX_ROW_COUNT)
 		{
@@ -174,7 +201,10 @@ public :
 			this->MATRIX_ROW_COUNT = other.MATRIX_ROW_COUNT;
 			this->MATRIX_COLOUMN_COUNT = other.MATRIX_COLOUMN_COUNT;
 
-			this->_matrixs.resize(MATRIX_ROW_COUNT, vector<T>(MATRIX_ROW_COUNT, 0));
+			//matrix column size is not resizing some times knowingly when =oprator called in methods other than constructor
+			//find what is the problem and find the solution
+
+			this->_matrixs.resize(MATRIX_ROW_COUNT, vector<T>(MATRIX_COLOUMN_COUNT, 0));
 
 			for (int i = 0; i < MATRIX_ROW_COUNT; i++)
 			{
@@ -184,7 +214,7 @@ public :
 				}
 			}
 		}
-	
+
 		return *this;
 	}
 
@@ -219,8 +249,24 @@ public :
 		return *_tempMat;
 	}
 
+	/*
+	 *this is overloaded to mltiply matrix with scalar but wise versa is not true,identify why and fix the problem.
+	 *
+	 */
+	Matrix<T>& operator*(double scalar)
+	{
+		for (int i = 0; i < MATRIX_ROW_COUNT;i++)
+		{
+			for (int j = 0; j < MATRIX_COLOUMN_COUNT;j++)
+			{
+				_matrixs[i][j] = scalar*_matrixs[i][j];
+			}
+		}
+		return *(new Matrix<T>(MATRIX_ROW_COUNT,MATRIX_COLOUMN_COUNT,_matrixs));
+	}
+
 	//this can be used to _matrix[i][j]  
-	T& operator()(int i,int j)
+	T& operator()(int i, int j)
 	{
 		return _matrixs[i][j];
 	}
@@ -230,29 +276,28 @@ protected:
 private:
 	vector<vector<T>> _matrixs;
 
-
 	//important constant veriable
-	 int MATRIX_ROW_COUNT;
-	 int MATRIX_COLOUMN_COUNT;
+	int MATRIX_ROW_COUNT;
+	int MATRIX_COLOUMN_COUNT;
 
-	 void initialize(T value)
-	 {
-		 _matrixs.resize(MATRIX_ROW_COUNT, vector<T>(MATRIX_COLOUMN_COUNT, value));
-	 }
+	void initialize(T value)
+	{
+		_matrixs.resize(MATRIX_ROW_COUNT, vector<T>(MATRIX_COLOUMN_COUNT, value));
+	}
 
-	 void random_initialize()
-	 {
-		 _matrixs.resize(MATRIX_ROW_COUNT, vector<T>(MATRIX_COLOUMN_COUNT, 0));
-		
-		 for (int i = 0; i < MATRIX_ROW_COUNT; i++)
-		 {
-			 for (int j = 0; j < MATRIX_COLOUMN_COUNT; j++)
-			 {
-				 _matrixs[i][j] = 1 + rand() % 10;;
-			 }
-		 }
+	void random_initialize()
+	{
+		_matrixs.resize(MATRIX_ROW_COUNT, vector<T>(MATRIX_COLOUMN_COUNT, 0));
 
-	 }
+		for (int i = 0; i < MATRIX_ROW_COUNT; i++)
+		{
+			for (int j = 0; j < MATRIX_COLOUMN_COUNT; j++)
+			{
+				_matrixs[i][j] = 1 + rand() % 10;;
+			}
+		}
+
+	}
 
 };
 
