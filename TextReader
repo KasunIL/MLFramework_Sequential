@@ -1,0 +1,126 @@
+//Read the data from the text document and format the data so that algorithm can use the data directly.
+//convert the text to the Matrix
+/*
+	Assuming the data format is x1_x2_,..............._xn_cost
+	this class add all the values including "cost" or "y" to the same matrix which contains "x" so the format of the matrix is like follows
+	 | x1 x2 x3...............xn  y|
+	 |                             | 
+	 .                             .
+	 .                             .
+	Frist implement this to input the space separated values, others can be done afterwards.
+*/
+
+#ifndef TEXT_READER_H
+#define TEXT_READER_H
+
+#include<fstream>
+#include<string>
+#include<iostream>
+#include "Matrix.h"
+
+using namespace std;
+
+class TextReader{
+
+public:
+	
+	//file path G:\\MLlibrary\\MLlibrary
+	//numOfFields including cost 
+	TextReader()
+	{}
+
+
+	TextReader(string path)
+	{
+		this->path = path;
+
+		ifstream myfile("FileTest.txt", ios::out);
+
+		if (!myfile)
+		{
+			cerr << "Error loading file";
+			exit(1);
+		}
+
+		string  buffer;
+
+		getline(myfile, buffer);
+
+		char nextChar;
+
+		// checks each character in the string
+		for (int i = 0; i < int(buffer.length()); i++)
+		{
+			nextChar = buffer.at(i); // gets a character
+			if (isspace(buffer[i]))
+				numSpaces++;
+		}
+
+
+		//word count = number of spaces +1
+		if (buffer.size() != 0)
+		{
+			bufferWordCount = numSpaces + 1;
+		}
+
+		//Clear the pointers in case of reaching eof and get the cursor to the begining og the file.
+		myfile.clear();
+		myfile.seekg(0);
+
+		//coutn the number of lines in the file.
+		while (getline(myfile, buffer))
+		{
+			numLines++;
+		}
+
+		//temperiry matrix for holing the values read.
+		Matrix<double> mat(numLines, bufferWordCount);
+
+		myfile.clear();
+		myfile.seekg(0);
+
+		string word;
+		int wordCount = 0;
+		int j = 0;
+
+		//read the data from file
+		while (myfile >> word)
+		{
+			//add values to the row
+			if (wordCount != 0 && wordCount % bufferWordCount == 0)
+			{
+				j++;
+			}
+
+			//convert the string data to the char* and then convert in to the double
+			mat(j, wordCount % bufferWordCount) = atof(word.c_str());
+			wordCount++;
+		}
+
+		//assinge the temerary matrix to the matrix
+		matrix = mat;
+
+		//print the matrix as logging
+		//matrix.printMatrix();
+	}
+
+	Matrix<double>& getMatrix();
+
+
+private:
+
+
+	Matrix<double> matrix;
+	string path;
+
+
+	//number of spaces in the buffer
+	int numSpaces = 0;
+	int numLines = 0;
+
+	//store the count of the word in the buffer
+	int bufferWordCount = 0;
+
+};
+
+#endif
