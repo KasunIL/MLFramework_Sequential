@@ -11,7 +11,7 @@ public:
 	LinearRegression(TextReader& reader)
 	{
 		_matrix = reader.getMatrix();
-		Matrix<double> xmat(_matrix.getRowCount(), _matrix.getColoumnCount() - 1);
+		Matrix<double> xmat(_matrix.getRowCount(), _matrix.getColoumnCount());
 		_xMatrix = xmat;
 		
 		Matrix<double> ymat(_matrix.getRowCount(), 1);
@@ -37,37 +37,69 @@ public:
 
 	void initialize()
 	{
-		_xMatrix = _matrix.subMatrix(0, _matrix.getRowCount(), 0, _matrix.getColoumnCount() - 1);
-
+	
+		_xMatrix = _matrix.subMatrix(0, _matrix.getRowCount(), 0, _matrix.getColoumnCount()-1 );
+		
+		//add column to the _xMatrix, and make that  columns values to the 1, so that the theta(0) represent the constant.
+		_xMatrix = Matrix<double>::addColumn(_xMatrix);
+	
 		//assuming the last column of the matrix contains "y"
 		_yMatrix = _matrix.subMatrix(0, _matrix.getRowCount(), _matrix.getColoumnCount() - 1, 1);
 
 		//theta matrix is column vector which has rows same as the _xMatrix.getRowCount()
-		Matrix<double> theta(_xMatrix.getRowCount(), 1);
+		Matrix<double> theta(_xMatrix.getColoumnCount(), 1);
 
 		_thetaMat = theta;
 
 		m = _matrix.getRowCount();
-		alpha = 0.03;
+		alpha = 0.003;
 
 	//  loging the information
 	//	_xMatrix.printMatrix();
 	//	cout << endl << endl;
 	// _yMatrix.printMatrix();
 
-		gradientDecend();
+		double c =cost();
+		int i = 0;
+		while (c>0.1)
+		{
+			cout << "cost is " << c << endl;
+			gradientDecend();
+			c = cost();
+			i++;
+		}
 
+		cout << "number of iteration" << i << endl;
+		//print the theta matrix(solved)
+		_thetaMat.printMatrix();
+		cout << endl;
 	}
 
 	Matrix<double> gradientDecend()
 	{
-		_thetaMat = _thetaMat - (((_xMatrix*_thetaMat - _yMatrix).transpose())*_xMatrix)*(alpha / m);
+		/*
+		Matrix<double> _xtheta = _xMatrix*_thetaMat;
+		Matrix<double> _xthey = _xtheta - _yMatrix;
+		Matrix<double> _xtheyT = _xthey.transpose();
+		Matrix<double> _xtheyTX = _xtheyT*_xMatrix;
+		Matrix<double> _xtheyTXVal = _xtheyTX*(0.001 / m);
+		*/
+		
+		Matrix<double> val = (((_xMatrix*_thetaMat - _yMatrix).transpose())*_xMatrix)*(0.02 / m);
+		Matrix<double> valT = val.transpose();
+		_thetaMat = _thetaMat -valT;
 		return _thetaMat;
 	}
 
+
 	double cost()
 	{
-	
+		Matrix<double> x1 = _xMatrix*_thetaMat;
+		Matrix<double> x2 = (x1 - _yMatrix);
+		Matrix<double> x2T = x2.transpose();
+		Matrix<double> cost = x2T*x2;
+		
+		return cost(0, 0);
 	}
 
 protected:
