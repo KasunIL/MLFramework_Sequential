@@ -65,7 +65,7 @@ public:
 
 	/////////////////////////////////////////Utility functions////////////////////////////////////////////////////////////////////////////////
 
-	vector<vector<T>>&  getVector()
+	vector<vector<T>>  getVector()
 	{
 		return this->_matrixs;
 	}
@@ -88,12 +88,12 @@ public:
 		}
 
 		//swap the value of dimension of the matrix
-		int temp = MATRIX_ROW_COUNT;
-		MATRIX_ROW_COUNT = MATRIX_COLOUMN_COUNT;
-		MATRIX_COLOUMN_COUNT = temp;
+		//int temp = MATRIX_ROW_COUNT;
+		//MATRIX_ROW_COUNT = MATRIX_COLOUMN_COUNT;
+		//MATRIX_COLOUMN_COUNT = temp;
 
 		//_matrixs = _tempMatrix;
-		return *(new Matrix<T>(MATRIX_ROW_COUNT,MATRIX_COLOUMN_COUNT,_tempMatrix));
+		return *(new Matrix<T>(MATRIX_COLOUMN_COUNT, MATRIX_ROW_COUNT, _tempMatrix));
 
 	}
 
@@ -144,6 +144,56 @@ public:
 
 		return mat;
 
+	}
+
+	static Matrix<T> addRow(Matrix<T>& other)
+	{
+
+	}
+
+	//add column with 1 as the frist column of the matrix
+	static Matrix<T>& addColumn(Matrix<T>& other)
+	{
+		vector<vector<T>> _swapVector = other.getVector();
+		vector<vector<T>> _tempMatrix = _swapVector;
+
+		//adding the extra column to the vector
+		//deside wether to use other.get__Count() or other.MATRIX_COLOUMN_COUNT
+
+		//_tempMatrix.resize(other.getRowCount(), vector<T>(other.getColoumnCount()+1, 1));
+		resizeVec(_tempMatrix, other.getRowCount(), other.getColoumnCount() + 1);
+
+
+		//itarate through the each element and change the element so that the matrix transpose
+		for (int i = 0; i < other.getRowCount(); i++)
+		{
+			for (int j = 0; j < other.getColoumnCount(); j++)
+			{
+				_tempMatrix[i][j+1] = _swapVector[i][j];
+			}
+		}
+
+		for (int i = 0; i < other.getRowCount(); i++)
+		{
+			_tempMatrix[i][0] = 1;
+		}
+
+		//increase the column count of the matrix
+		other.MATRIX_COLOUMN_COUNT = other.MATRIX_COLOUMN_COUNT + 1;
+
+		//_matrixs = _tempMatrix;
+		return *(new Matrix<T>(other.MATRIX_ROW_COUNT, other.MATRIX_COLOUMN_COUNT, _tempMatrix));
+
+	}
+
+
+	static void resizeVec(std::vector<std::vector<T> > &vec, const unsigned short ROWS, const unsigned short COLUMNS)
+	{
+		vec.resize(ROWS);
+		for (auto &it : vec)
+		{
+			it.resize(COLUMNS);
+		}
 	}
 
 	////////////////////////////////////operator overload/////////////////////////////////////////////////////////////////////////////////
@@ -197,35 +247,18 @@ public:
 	{
 		if (this != &other)
 		{
-			vector<vector<T>>& vec = other.getVector();
+			_matrixs.clear();
+			_matrixs = other.getVector();
 			this->MATRIX_ROW_COUNT = other.MATRIX_ROW_COUNT;
 			this->MATRIX_COLOUMN_COUNT = other.MATRIX_COLOUMN_COUNT;
-
-			//matrix column size is not resizing some times knowingly when =oprator called in methods other than constructor
-			//find what is the problem and find the solution
-
-			this->_matrixs.resize(MATRIX_ROW_COUNT, vector<T>(MATRIX_COLOUMN_COUNT, 0));
-
-			for (int i = 0; i < MATRIX_ROW_COUNT; i++)
-			{
-				for (int j = 0; j < MATRIX_COLOUMN_COUNT; j++)
-				{
-					_matrixs[i][j] = vec[i][j];
-				}
-			}
 		}
-
 		return *this;
 	}
 
-	Matrix<T>& operator*(Matrix<T>& matrixToMultiply)
+	Matrix<T> operator*(Matrix<T> matrixToMultiply)
 	{
 		vector<vector<T>> _secondVec = matrixToMultiply.getVector();
-		Matrix<T>* _tempMat = new Matrix(MATRIX_ROW_COUNT, matrixToMultiply.getColoumnCount());
-		_tempMat->initialize(0);
-
-
-		vector<vector<T>>& _tempVec = _tempMat->getVector();
+		vector<vector<T>> _tempVec(MATRIX_ROW_COUNT,vector<T>(matrixToMultiply.getColoumnCount(), 0));;
 
 		if (this->MATRIX_COLOUMN_COUNT == matrixToMultiply.getRowCount())
 		{
@@ -246,7 +279,7 @@ public:
 			cout << "you cannot multiply these matrix" << endl;
 		}
 
-		return *_tempMat;
+		return *(new Matrix(MATRIX_ROW_COUNT, matrixToMultiply.getColoumnCount(), _tempVec));
 	}
 
 	/*
@@ -302,3 +335,12 @@ private:
 };
 
 #endif
+
+/*
+verify the functionality of matrix transpose, multiplication, = operator, copy constructor
+	1.=operator
+	2.copy constructor
+	3.Multiplication
+	4.transpose
+
+*/
